@@ -210,7 +210,7 @@ gsea/
 
 ## Estado del Proyecto
 
-### COMPLETADO (83% del proyecto total)
+### COMPLETADO (80% del proyecto total)
 
 #### Funcionalidad del Programa (100% completado)
 - **Compresión/Descompresión**: RLE implementado desde cero, sin corrupción de datos
@@ -231,7 +231,7 @@ gsea/
 - **Código**: 100% - Bien comentado en español
 - **Documento técnico**: 0% - Falta documento PDF completo
 
-### PENDIENTE (17% del proyecto total)
+### PENDIENTE (20% del proyecto total)
 - **Concurrencia**: Procesamiento paralelo con pthreads (0% implementado)
 - **Operaciones combinadas**: -ce, -de, -ec, -du (0% implementado)
 - **Documentación técnica**: Documento PDF completo (0% implementado)
