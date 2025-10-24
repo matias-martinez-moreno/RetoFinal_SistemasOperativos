@@ -12,8 +12,21 @@ Asegúrate de estar en el directorio del proyecto y tener permisos de ejecución
 
 ### Compilación
 ```bash
-make clean
+# Compilar el proyecto
 make
+
+# O para compilar, probar y limpiar automáticamente
+make deliver
+```
+
+### Comandos del Makefile
+```bash
+make          # Compilar el proyecto (mantiene ejecutable)
+make build    # Compilar y mostrar mensaje de éxito
+make test     # Compilar, probar y limpiar automáticamente
+make deliver  # Compilar, probar TODO y limpiar (para entrega)
+make clean    # Limpiar archivos generados y temporales
+make help     # Mostrar ayuda del Makefile
 ```
 
 ### Pruebas Básicas de Funcionalidad
