@@ -12,10 +12,6 @@ Utilidad de línea de comandos desarrollada en C que permite comprimir/descompri
 
 ### Paso 1: Compilar el Proyecto
 ```bash
-# Extraer el archivo del proyecto
-tar -xzf ProyectoFinal_GSEA.tar.gz
-cd parcialFinal_SistemasOperativos
-
 # Compilar usando Makefile
 make
 
