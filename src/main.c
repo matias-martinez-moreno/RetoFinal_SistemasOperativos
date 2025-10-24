@@ -10,8 +10,13 @@
 /**
  * Función principal del programa GSEA
  * 
- * GSEA es una utilidad de línea de comandos para comprimir/descomprimir
- * archivos usando el algoritmo RLE (Run-Length Encoding).
+ * Esta es la función principal que coordina todo el funcionamiento del programa.
+ * Se encarga de parsear los argumentos, verificar archivos y directorios,
+ * y llamar a las funciones apropiadas según la operación solicitada.
+ * 
+ * @param argc Número de argumentos de la línea de comandos
+ * @param argv Array de argumentos de la línea de comandos
+ * @return 0 si todo salió bien, 1 si hubo algún error
  */
 int main(int argc, char* argv[]) {
     printf("GSEA - Utilidad de Gestión Segura y Eficiente de Archivos\n");

@@ -1,5 +1,10 @@
 # GSEA - Utilidad de Gestión Segura y Eficiente de Archivos
 
+## Equipo de Desarrollo
+- **Matías Martínez**
+- **Sofía Gallo**
+- **Juan Manuel Gallo**
+
 ## Descripción
 Utilidad de línea de comandos para comprimir/descomprimir y encriptar/desencriptar archivos y directorios. Implementa algoritmos propios de compresión RLE y encriptación Vigenère usando llamadas directas al sistema operativo.
 
