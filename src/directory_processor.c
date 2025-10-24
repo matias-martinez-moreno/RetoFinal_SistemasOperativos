@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <limits.h>
+#include <pthread.h>
+#include <unistd.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -29,13 +31,42 @@ char* mi_strdup_dir(const char* s) {
     return dup;
 }
 
+// Estructura para pasar datos a los hilos
+typedef struct {
+    char ruta_entrada[PATH_MAX];
+    char ruta_salida[PATH_MAX];
+    char operacion;
+    const char* algoritmo_comp;
+    const char* algoritmo_enc;
+    const char* clave;
+    int resultado;
+} DatosHilo;
+
+// Función que ejecuta cada hilo
+void* procesar_archivo_hilo(void* arg) {
+    DatosHilo* datos = (DatosHilo*)arg;
+    
+    printf("Hilo procesando: %s\n", datos->ruta_entrada);
+    
+    // Procesar el archivo individual
+    datos->resultado = procesar_archivo_individual(
+        datos->ruta_entrada, 
+        datos->ruta_salida,
+        datos->operacion,
+        datos->algoritmo_comp,
+        datos->algoritmo_enc,
+        datos->clave
+    );
+    
+    printf("Hilo completado: %s (resultado: %d)\n", datos->ruta_entrada, datos->resultado);
+    return NULL;
+}
+
 /**
- * Procesa un directorio completo aplicando la operación especificada
+ * Procesa un directorio completo aplicando la operación especificada CON CONCURRENCIA
  * 
- * Esta función utiliza las llamadas al sistema opendir(), readdir() y closedir()
- * para procesar todos los archivos regulares dentro de un directorio.
- * Aplica la operación especificada (compresión, descompresión, encriptación, desencriptación)
- * a cada archivo encontrado.
+ * Esta función utiliza pthreads para procesar múltiples archivos en paralelo,
+ * mejorando el rendimiento en sistemas multinúcleo.
  */
 int procesar_directorio(const char* ruta_directorio, const char* ruta_salida,
                         char operacion, const char* algoritmo_comp, 
@@ -51,13 +82,13 @@ int procesar_directorio(const char* ruta_directorio, const char* ruta_salida,
         return -1;
     }
     
-    // Crear el directorio de salida si no existe
+    // Crear directorio de salida si no existe
     if (crear_directorio_salida(ruta_salida) != 0) {
         fprintf(stderr, "Error: No se pudo crear el directorio de salida '%s'\n", ruta_salida);
         return -1;
     }
     
-    // Abrir el directorio usando llamada al sistema
+    // Abrir directorio de entrada
     DIR* dir = opendir(ruta_directorio);
     if (!dir) {
         fprintf(stderr, "Error: No se pudo abrir el directorio '%s': %s\n", 
@@ -65,68 +96,264 @@ int procesar_directorio(const char* ruta_directorio, const char* ruta_salida,
         return -1;
     }
     
-    printf("Procesando directorio: %s\n", ruta_directorio);
-    printf("Directorio de salida: %s\n", ruta_salida);
-    printf("Operación: %c\n", operacion);
-    
+    // Contar archivos para crear hilos
     struct dirent* entrada;
-    int archivos_procesados = 0;
-    int archivos_exitosos = 0;
+    int num_archivos = 0;
     
-    // Procesar cada entrada del directorio
+    // Primera pasada: contar archivos
     while ((entrada = readdir(dir)) != NULL) {
-        // Saltar entradas especiales
-        if (strcmp(entrada->d_name, ".") == 0 || strcmp(entrada->d_name, "..") == 0) {
-            continue;
-        }
-        
-        // Solo procesar archivos regulares
-        if (entrada->d_type == DT_REG) {
-            archivos_procesados++;
-            
-            // Construir rutas completas
-            char ruta_archivo[PATH_MAX];
-            char ruta_archivo_salida[PATH_MAX];
-            
-            snprintf(ruta_archivo, sizeof(ruta_archivo), "%s/%s", ruta_directorio, entrada->d_name);
-            snprintf(ruta_archivo_salida, sizeof(ruta_archivo_salida), "%s/%s", ruta_salida, entrada->d_name);
-            
-            printf("Procesando archivo: %s\n", entrada->d_name);
-            
-            // Procesar el archivo según la operación
-            if (procesar_archivo_individual(ruta_archivo, ruta_archivo_salida, 
-                                          operacion, algoritmo_comp, algoritmo_enc, clave) == 0) {
-                archivos_exitosos++;
-                printf("Archivo procesado exitosamente: %s\n", entrada->d_name);
-            } else {
-                fprintf(stderr, "Error: No se pudo procesar el archivo '%s'\n", entrada->d_name);
-            }
+        if (strcmp(entrada->d_name, ".") != 0 && strcmp(entrada->d_name, "..") != 0 &&
+            entrada->d_type == DT_REG) {
+            num_archivos++;
         }
     }
     
-    // Cerrar el directorio
+    if (num_archivos == 0) {
+        printf("No se encontraron archivos para procesar\n");
+        closedir(dir);
+        return 0;
+    }
+    
+    printf("Procesando directorio con CONCURRENCIA: %s\n", ruta_directorio);
+    printf("Archivos encontrados: %d\n", num_archivos);
+    printf("Usando hilos para procesamiento paralelo\n");
+    
+    // Crear arrays para hilos y datos
+    pthread_t* hilos = malloc(num_archivos * sizeof(pthread_t));
+    DatosHilo* datos_hilos = malloc(num_archivos * sizeof(DatosHilo));
+    
+    if (!hilos || !datos_hilos) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para hilos\n");
+        closedir(dir);
+        free(hilos);
+        free(datos_hilos);
+        return -1;
+    }
+    
+    // Segunda pasada: crear hilos para cada archivo
+    rewinddir(dir);
+    int indice = 0;
+    
+    while ((entrada = readdir(dir)) != NULL) {
+        if (strcmp(entrada->d_name, ".") != 0 && strcmp(entrada->d_name, "..") != 0 &&
+            entrada->d_type == DT_REG) {
+            
+            // Configurar datos del hilo
+            snprintf(datos_hilos[indice].ruta_entrada, sizeof(datos_hilos[indice].ruta_entrada),
+                    "%s/%s", ruta_directorio, entrada->d_name);
+            snprintf(datos_hilos[indice].ruta_salida, sizeof(datos_hilos[indice].ruta_salida),
+                    "%s/%s", ruta_salida, entrada->d_name);
+            datos_hilos[indice].operacion = operacion;
+            datos_hilos[indice].algoritmo_comp = algoritmo_comp;
+            datos_hilos[indice].algoritmo_enc = algoritmo_enc;
+            datos_hilos[indice].clave = clave;
+            datos_hilos[indice].resultado = -1;
+            
+            // Crear hilo
+            if (pthread_create(&hilos[indice], NULL, procesar_archivo_hilo, &datos_hilos[indice]) != 0) {
+                fprintf(stderr, "Error: No se pudo crear hilo para %s\n", entrada->d_name);
+                datos_hilos[indice].resultado = -1;
+            }
+            
+            indice++;
+        }
+    }
+    
     closedir(dir);
     
-    printf("Procesamiento completado: %d/%d archivos procesados exitosamente\n", 
-           archivos_exitosos, archivos_procesados);
+    // Esperar a que todos los hilos terminen
+    printf("Esperando a que terminen todos los hilos...\n");
+    int archivos_procesados = 0;
+    int errores = 0;
     
-    return (archivos_exitosos == archivos_procesados) ? 0 : -1;
+    for (int i = 0; i < num_archivos; i++) {
+        pthread_join(hilos[i], NULL);
+        
+        if (datos_hilos[i].resultado == 0) {
+            archivos_procesados++;
+        } else {
+            errores++;
+        }
+    }
+    
+    // Liberar memoria
+    free(hilos);
+    free(datos_hilos);
+    
+    printf("\nResumen del procesamiento CONCURRENTE:\n");
+    printf("- Archivos procesados: %d\n", archivos_procesados);
+    printf("- Errores: %d\n", errores);
+    printf("- Hilos utilizados: %d\n", num_archivos);
+    
+    if (errores > 0) {
+        printf("Advertencia: Se encontraron %d errores durante el procesamiento\n", errores);
+        return -1;
+    }
+    
+    return 0;
 }
 
-/**
- * Procesa un archivo individual aplicando la operación especificada
- * 
- * Esta función procesa un archivo individual aplicando la operación
- * de compresión, descompresión, encriptación o desencriptación.
- */
-int procesar_archivo_individual(const char* archivo_entrada, const char* archivo_salida,
+// Implementar operaciones combinadas
+int procesar_operacion_combinada(const char* ruta_entrada, const char* ruta_salida,
+                                 const char* operaciones, const char* algoritmo_comp,
+                                 const char* algoritmo_enc, const char* clave) {
+    if (!ruta_entrada || !ruta_salida || !operaciones) {
+        fprintf(stderr, "Error: Parámetros inválidos para operación combinada\n");
+        return -1;
+    }
+    
+    printf("Procesando operación combinada: %s\n", operaciones);
+    
+    // -ce: comprimir y encriptar
+    if (strcmp(operaciones, "-ce") == 0) {
+        char ruta_intermedia[PATH_MAX];
+        snprintf(ruta_intermedia, sizeof(ruta_intermedia), "%s.temp", ruta_salida);
+        
+        // Paso 1: Comprimir
+        printf("Paso 1: Comprimiendo archivo...\n");
+        if (procesar_archivo_individual(ruta_entrada, ruta_intermedia, 'c', 
+                                      algoritmo_comp, NULL, NULL) != 0) {
+            fprintf(stderr, "Error en compresión\n");
+            return -1;
+        }
+        
+        // Paso 2: Encriptar
+        printf("Paso 2: Encriptando archivo comprimido...\n");
+        if (procesar_archivo_individual(ruta_intermedia, ruta_salida, 'e',
+                                      NULL, algoritmo_enc, clave) != 0) {
+            fprintf(stderr, "Error en encriptación\n");
+            unlink(ruta_intermedia); // Limpiar archivo temporal
+            return -1;
+        }
+        
+        // Limpiar archivo temporal
+        unlink(ruta_intermedia);
+        printf("Operación -ce completada exitosamente\n");
+        return 0;
+    }
+    
+    // -de: descomprimir y encriptar
+    if (strcmp(operaciones, "-de") == 0) {
+        char ruta_intermedia[PATH_MAX];
+        snprintf(ruta_intermedia, sizeof(ruta_intermedia), "%s.temp", ruta_salida);
+        
+        // Paso 1: Descomprimir
+        printf("Paso 1: Descomprimiendo archivo...\n");
+        if (procesar_archivo_individual(ruta_entrada, ruta_intermedia, 'd',
+                                      algoritmo_comp, NULL, NULL) != 0) {
+            fprintf(stderr, "Error en descompresión\n");
+            return -1;
+        }
+        
+        // Paso 2: Encriptar
+        printf("Paso 2: Encriptando archivo descomprimido...\n");
+        if (procesar_archivo_individual(ruta_intermedia, ruta_salida, 'e',
+                                      NULL, algoritmo_enc, clave) != 0) {
+            fprintf(stderr, "Error en encriptación\n");
+            unlink(ruta_intermedia);
+            return -1;
+        }
+        
+        unlink(ruta_intermedia);
+        printf("Operación -de completada exitosamente\n");
+        return 0;
+    }
+    
+    // -ec: encriptar y comprimir
+    if (strcmp(operaciones, "-ec") == 0) {
+        char ruta_intermedia[PATH_MAX];
+        snprintf(ruta_intermedia, sizeof(ruta_intermedia), "%s.temp", ruta_salida);
+        
+        // Paso 1: Encriptar
+        printf("Paso 1: Encriptando archivo...\n");
+        if (procesar_archivo_individual(ruta_entrada, ruta_intermedia, 'e',
+                                      NULL, algoritmo_enc, clave) != 0) {
+            fprintf(stderr, "Error en encriptación\n");
+            return -1;
+        }
+        
+        // Paso 2: Comprimir
+        printf("Paso 2: Comprimiendo archivo encriptado...\n");
+        if (procesar_archivo_individual(ruta_intermedia, ruta_salida, 'c',
+                                      algoritmo_comp, NULL, NULL) != 0) {
+            fprintf(stderr, "Error en compresión\n");
+            unlink(ruta_intermedia);
+            return -1;
+        }
+        
+        unlink(ruta_intermedia);
+        printf("Operación -ec completada exitosamente\n");
+        return 0;
+    }
+    
+    // -du: desencriptar y descomprimir
+    if (strcmp(operaciones, "-du") == 0) {
+        char ruta_intermedia[PATH_MAX];
+        snprintf(ruta_intermedia, sizeof(ruta_intermedia), "%s.temp", ruta_salida);
+        
+        // Paso 1: Desencriptar
+        printf("Paso 1: Desencriptando archivo...\n");
+        if (procesar_archivo_individual(ruta_entrada, ruta_intermedia, 'u',
+                                      NULL, algoritmo_enc, clave) != 0) {
+            fprintf(stderr, "Error en desencriptación\n");
+            return -1;
+        }
+        
+        // Paso 2: Descomprimir
+        printf("Paso 2: Descomprimiendo archivo desencriptado...\n");
+        if (procesar_archivo_individual(ruta_intermedia, ruta_salida, 'd',
+                                      algoritmo_comp, NULL, NULL) != 0) {
+            fprintf(stderr, "Error en descompresión\n");
+            unlink(ruta_intermedia);
+            return -1;
+        }
+        
+        unlink(ruta_intermedia);
+        printf("Operación -du completada exitosamente\n");
+        return 0;
+    }
+    
+    fprintf(stderr, "Error: Operación combinada no soportada: %s\n", operaciones);
+    return -1;
+}
+
+// Resto de funciones existentes...
+int es_directorio(const char* ruta) {
+    struct stat st;
+    if (stat(ruta, &st) == -1) {
+        return -1;
+    }
+    return S_ISDIR(st.st_mode) ? 1 : 0;
+}
+
+int crear_directorio_salida(const char* ruta) {
+    struct stat st;
+    if (stat(ruta, &st) == 0) {
+        if (S_ISDIR(st.st_mode)) {
+            return 0; // Ya existe
+        } else {
+            return -1; // Existe pero no es directorio
+        }
+    }
+    
+    if (mkdir(ruta, 0755) == 0) {
+        printf("Directorio creado: %s\n", ruta);
+        return 0;
+    } else {
+        fprintf(stderr, "Error: No se pudo crear el directorio '%s': %s\n", 
+                ruta, strerror(errno));
+        return -1;
+    }
+}
+
+int procesar_archivo_individual(const char* ruta_entrada, const char* ruta_salida,
                                char operacion, const char* algoritmo_comp,
                                const char* algoritmo_enc, const char* clave) {
-    // Leer el archivo de entrada
-    char* contenido = NULL;
-    size_t tamano = 0;
+    // Leer archivo
+    char* contenido;
+    size_t tamano;
     
-    if (leer_archivo(archivo_entrada, &contenido, &tamano) != 0) {
+    if (leer_archivo(ruta_entrada, &contenido, &tamano) != 0) {
         return -1;
     }
     
@@ -134,7 +361,7 @@ int procesar_archivo_individual(const char* archivo_entrada, const char* archivo
     size_t tamano_procesado = 0;
     int resultado = 0;
     
-    // Aplicar la operación según el tipo
+    // Aplicar operación
     switch (operacion) {
         case 'c': // Comprimir
             if (strcmp(algoritmo_comp, "rle") == 0) {
@@ -185,132 +412,54 @@ int procesar_archivo_individual(const char* archivo_entrada, const char* archivo
         default:
             fprintf(stderr, "Error: Operación no válida: %c\n", operacion);
             resultado = -1;
-            break;
     }
     
-    // Escribir el archivo de salida si la operación fue exitosa
+    // Escribir resultado si fue exitoso
     if (resultado == 0 && datos_procesados) {
-        resultado = escribir_archivo(archivo_salida, datos_procesados, tamano_procesado);
-    }
-    
-    // Liberar memoria
-    if (contenido) free(contenido);
-    if (datos_procesados) {
-        if (operacion == 'e' || operacion == 'u') {
-            liberar_datos_encriptados(datos_procesados);
-        } else {
-            liberar_datos(datos_procesados);
+        if (escribir_archivo(ruta_salida, datos_procesados, tamano_procesado) != 0) {
+            resultado = -1;
         }
+        free(datos_procesados);
     }
     
+    free(contenido);
     return resultado;
 }
 
-/**
- * Lista todos los archivos regulares en un directorio
- */
 int listar_archivos_directorio(const char* ruta_directorio, char*** archivos, size_t* num_archivos) {
-    if (!ruta_directorio || !archivos || !num_archivos) {
-        return -1;
-    }
-    
     DIR* dir = opendir(ruta_directorio);
     if (!dir) {
         return -1;
     }
     
-    // Contar archivos primero
-    *num_archivos = 0;
-    struct dirent* entrada;
-    while ((entrada = readdir(dir)) != NULL) {
-        if (entrada->d_type == DT_REG && strcmp(entrada->d_name, ".") != 0 && strcmp(entrada->d_name, "..") != 0) {
-            (*num_archivos)++;
-        }
-    }
-    
-    // Asignar memoria para el array de archivos
-    *archivos = malloc(*num_archivos * sizeof(char*));
-    if (!*archivos) {
+    char** lista_archivos = malloc(100 * sizeof(char*));
+    if (!lista_archivos) {
         closedir(dir);
         return -1;
     }
     
-    // Volver al inicio del directorio
-    rewinddir(dir);
+    size_t contador = 0;
+    struct dirent* entrada;
     
-    // Llenar el array con las rutas de los archivos
-    size_t indice = 0;
-    while ((entrada = readdir(dir)) != NULL) {
-        if (entrada->d_type == DT_REG && strcmp(entrada->d_name, ".") != 0 && strcmp(entrada->d_name, "..") != 0) {
-            char ruta_completa[PATH_MAX];
-            snprintf(ruta_completa, sizeof(ruta_completa), "%s/%s", ruta_directorio, entrada->d_name);
-            (*archivos)[indice] = mi_strdup_dir(ruta_completa);
-            indice++;
+    while ((entrada = readdir(dir)) != NULL && contador < 100) {
+        if (strcmp(entrada->d_name, ".") != 0 && strcmp(entrada->d_name, "..") != 0 &&
+            entrada->d_type == DT_REG) {
+            lista_archivos[contador] = mi_strdup_dir(entrada->d_name);
+            contador++;
         }
     }
     
     closedir(dir);
+    *archivos = lista_archivos;
+    *num_archivos = contador;
     return 0;
 }
 
-/**
- * Crea un directorio de salida si no existe
- */
-int crear_directorio_salida(const char* ruta_directorio) {
-    if (!ruta_directorio) {
-        return -1;
-    }
-    
-    // Verificar si el directorio ya existe
-    struct stat st;
-    if (stat(ruta_directorio, &st) == 0) {
-        if (S_ISDIR(st.st_mode)) {
-            return 0; // El directorio ya existe
-        } else {
-            return -1; // Existe pero no es un directorio
-        }
-    }
-    
-    // Crear el directorio con permisos 755
-    if (mkdir(ruta_directorio, 0755) == 0) {
-        printf("Directorio creado: %s\n", ruta_directorio);
-        return 0;
-    } else {
-        fprintf(stderr, "Error: No se pudo crear el directorio '%s': %s\n", 
-                ruta_directorio, strerror(errno));
-        return -1;
-    }
-}
-
-/**
- * Verifica si una ruta es un directorio
- */
-int es_directorio(const char* ruta) {
-    if (!ruta) {
-        return -1;
-    }
-    
-    struct stat st;
-    if (stat(ruta, &st) == -1) {
-        return -1;
-    }
-    
-    return S_ISDIR(st.st_mode) ? 1 : 0;
-}
-
-/**
- * Libera la memoria asignada para la lista de archivos
- */
 void liberar_lista_archivos(char** archivos, size_t num_archivos) {
-    if (!archivos) {
-        return;
-    }
+    if (!archivos) return;
     
     for (size_t i = 0; i < num_archivos; i++) {
-        if (archivos[i]) {
-            free(archivos[i]);
-        }
+        free(archivos[i]);
     }
-    
     free(archivos);
 }

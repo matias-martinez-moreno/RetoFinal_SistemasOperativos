@@ -71,4 +71,19 @@ int procesar_archivo_individual(const char* archivo_entrada, const char* archivo
                                char operacion, const char* algoritmo_comp,
                                const char* algoritmo_enc, const char* clave);
 
+/**
+ * Procesa operaciones combinadas (-ce, -de, -ec, -du)
+ * 
+ * @param ruta_entrada Ruta del archivo de entrada
+ * @param ruta_salida Ruta del archivo de salida
+ * @param operaciones Operación combinada (-ce, -de, -ec, -du)
+ * @param algoritmo_comp Algoritmo de compresión
+ * @param algoritmo_enc Algoritmo de encriptación
+ * @param clave Clave para encriptación
+ * @return 0 si es exitoso, -1 si hay error
+ */
+int procesar_operacion_combinada(const char* ruta_entrada, const char* ruta_salida,
+                                 const char* operaciones, const char* algoritmo_comp,
+                                 const char* algoritmo_enc, const char* clave);
+
 #endif

@@ -9,14 +9,15 @@
 typedef struct {
     bool comprimir;        // -c: comprimir archivo
     bool descomprimir;     // -d: descomprimir archivo
-    bool encriptar;        // -e: encriptar archivo (no implementado aún)
-    bool desencriptar;     // -u: desencriptar archivo (no implementado aún)
+    bool encriptar;        // -e: encriptar archivo
+    bool desencriptar;     // -u: desencriptar archivo
+    char* operacion_combinada; // -ce, -de, -ec, -du: operaciones combinadas
     
     char* algoritmo_comp;  // --comp-alg: algoritmo de compresión
-    char* algoritmo_enc;   // --enc-alg: algoritmo de encriptación (no implementado)
+    char* algoritmo_enc;   // --enc-alg: algoritmo de encriptación
     char* archivo_entrada; // -i: archivo de entrada
     char* archivo_salida;  // -o: archivo de salida
-    char* clave;           // -k: clave para encriptación (no implementado)
+    char* clave;           // -k: clave para encriptación
 } Argumentos;
 
 /**

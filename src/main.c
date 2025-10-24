@@ -20,7 +20,7 @@
  */
 int main(int argc, char* argv[]) {
     printf("GSEA - Utilidad de Gestión Segura y Eficiente de Archivos\n");
-    printf("Versión: 2.1 (Fase 2 - Compresión RLE + Encriptación Vigenère + Directorios)\n\n");
+    printf("Versión: 3.0 (Fase 3 - Concurrencia + Operaciones Combinadas)\n\n");
     
     // Parsear argumentos de línea de comandos
     Argumentos* args = parsear_argumentos(argc, argv);
@@ -40,11 +40,30 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
+    // Verificar operaciones combinadas primero
+    if (args->operacion_combinada) {
+        printf("Procesando operación combinada: %s\n", args->operacion_combinada);
+        
+        int resultado = procesar_operacion_combinada(args->archivo_entrada, args->archivo_salida,
+                                                    args->operacion_combinada, args->algoritmo_comp,
+                                                    args->algoritmo_enc, args->clave);
+        
+        liberar_argumentos(args);
+        
+        if (resultado == 0) {
+            printf("Operación combinada completada exitosamente\n");
+            return 0;
+        } else {
+            printf("Error en la operación combinada\n");
+            return 1;
+        }
+    }
+    
     // Verificar si la entrada es un directorio
     int es_dir = es_directorio(args->archivo_entrada);
     if (es_dir == 1) {
-        // Procesar directorio completo
-        printf("Procesando directorio: %s\n", args->archivo_entrada);
+        // Procesar directorio completo CON CONCURRENCIA
+        printf("Procesando directorio CON CONCURRENCIA: %s\n", args->archivo_entrada);
         
         char operacion = 'c'; // Por defecto comprimir
         if (args->comprimir) operacion = 'c';
@@ -59,7 +78,7 @@ int main(int argc, char* argv[]) {
         liberar_argumentos(args);
         
         if (resultado == 0) {
-            printf("Procesamiento de directorio completado exitosamente\n");
+            printf("Procesamiento concurrente de directorio completado exitosamente\n");
             return 0;
         } else {
             printf("Error en el procesamiento del directorio\n");

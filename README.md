@@ -60,29 +60,44 @@ echo "Datos genéticos originales:" && cat datos_geneticos.txt
 echo "Datos desencriptados:" && cat datos_desencriptados.txt
 ```
 
-### Paso 4: Probar Procesamiento de Directorios Completos
+### Paso 4: Probar Procesamiento de Directorios CON CONCURRENCIA
 ```bash
 # Crear directorio de prueba con múltiples archivos
 mkdir test_dir
-echo "contenido1" > test_dir/archivo1.txt
-echo "contenido2" > test_dir/archivo2.txt
-echo "AAAABBBCC" > test_dir/archivo3.txt
+echo "ATCGATCGATCGATCG" > test_dir/archivo1.txt
+echo "GCTAGCTAGCTAGCTA" > test_dir/archivo2.txt
+echo "TTTTTTTTTTTTTTTT" > test_dir/archivo3.txt
 echo "Mensaje secreto" > test_dir/archivo4.txt
 
 # Verificar contenido del directorio
 echo "Archivos en el directorio:" && ls test_dir/
 
-# Comprimir todo el directorio
+# Comprimir todo el directorio CON HILOS PARALELOS
 ./gsea -c --comp-alg rle -i test_dir -o test_dir_comprimido
 
 # Verificar que se creó el directorio comprimido
 echo "Archivos comprimidos:" && ls test_dir_comprimido/
 
-# Encriptar todo el directorio
+# Encriptar todo el directorio CON HILOS PARALELOS
 ./gsea -e --enc-alg vigenere -i test_dir -o test_dir_encriptado -k "clave"
 
 # Verificar que se creó el directorio encriptado
 echo "Archivos encriptados:" && ls test_dir_encriptado/
+```
+
+### Paso 5: Probar Operaciones Combinadas
+```bash
+# -ce: Comprimir y luego encriptar
+./gsea -ce --comp-alg rle --enc-alg vigenere -i datos_geneticos.txt -o datos_geneticos.txt.ce -k "genoma"
+
+# -du: Desencriptar y luego descomprimir
+./gsea -du --comp-alg rle --enc-alg vigenere -i datos_geneticos.txt.ce -o datos_geneticos_restaurados.txt -k "genoma"
+
+# -ec: Encriptar y luego comprimir
+./gsea -ec --comp-alg rle --enc-alg vigenere -i datos_geneticos.txt -o datos_geneticos.txt.ec -k "genoma"
+
+# -de: Descomprimir y luego encriptar
+./gsea -de --comp-alg rle --enc-alg vigenere -i datos_geneticos.txt.ec -o datos_geneticos.txt.de -k "genoma"
 ```
 
 ### Paso 5: Verificar Llamadas al Sistema
@@ -116,12 +131,14 @@ El proyecto está diseñado con una arquitectura modular que separa las responsa
 4. **Procesamiento**: Se aplica el algoritmo correspondiente (RLE o Vigenère)
 5. **Escritura del resultado**: Se escribe usando `open()`, `write()`, `close()`, `fsync()`
 
-#### Para Directorios Completos:
+#### Para Directorios Completos CON CONCURRENCIA:
 1. **Detección de directorio**: Se verifica si la entrada es un directorio usando `stat()`
 2. **Apertura del directorio**: Se abre usando `opendir()`
-3. **Iteración de archivos**: Se lee cada archivo usando `readdir()`
-4. **Procesamiento individual**: Cada archivo se procesa como archivo individual
-5. **Cierre del directorio**: Se cierra usando `closedir()`
+3. **Conteo de archivos**: Primera pasada para contar archivos regulares
+4. **Creación de hilos**: Se crea un hilo pthread para cada archivo
+5. **Procesamiento paralelo**: Cada hilo procesa su archivo independientemente
+6. **Sincronización**: Se espera a que todos los hilos terminen con `pthread_join()`
+7. **Cierre del directorio**: Se cierra usando `closedir()`
 
 ### Llamadas al Sistema Utilizadas
 
@@ -147,6 +164,12 @@ El proyecto está diseñado con una arquitectura modular que separa las responsa
 - **Implementación**: `[carácter][contador]` (ej: "AAAABBB" → "A4B3")
 - **Ventajas**: Simple, rápido, eficaz con datos repetitivos
 - **Complejidad**: O(n) tiempo y espacio
+
+#### Operaciones Combinadas:
+- **-ce**: Comprimir → Encriptar (ideal para almacenamiento seguro)
+- **-de**: Descomprimir → Encriptar (procesamiento de datos descomprimidos)
+- **-ec**: Encriptar → Comprimir (encriptación antes de compresión)
+- **-du**: Desencriptar → Descomprimir (restauración completa)
 - **Caso de uso**: Datos genéticos repetitivos (ATCG) con 84% de compresión
 
 #### Vigenère:
@@ -210,16 +233,17 @@ gsea/
 
 ## Estado del Proyecto
 
-### COMPLETADO (80% del proyecto total)
+### COMPLETADO (95% del proyecto total)
 
 #### Funcionalidad del Programa
 - **Compresión/Descompresión**: RLE implementado desde cero, sin corrupción de datos
 - **Encriptación/Desencriptación**: Vigenère implementado desde cero, funciona correctamente
 - **Manejo de Argumentos**: Parser completo con validación robusta
+- **Operaciones Combinadas**: -ce, -de, -ec, -du implementadas ✅
 
 #### Aplicación de Conceptos de SO
 - **Llamadas al Sistema**: open, read, write, close, opendir, readdir implementados
-- **Concurrencia**: NO implementada (principal limitación)
+- **Concurrencia**: pthreads implementado para procesamiento paralelo ✅
 - **Manejo de Recursos**: Sin fugas de memoria, gestión correcta
 
 #### Calidad del Código y Algoritmos
@@ -231,9 +255,7 @@ gsea/
 - **Código**: Bien comentado en español
 - **Documento técnico**: Falta documento PDF completo
 
-### PENDIENTE (20% del proyecto total)
-- **Concurrencia**: Procesamiento paralelo con pthreads
-- **Operaciones combinadas**: -ce, -de, -ec, -du
+### PENDIENTE (5% del proyecto total)
 - **Documentación técnica**: Documento PDF completo
 - **Video de sustentación**: Demostración en vivo
 

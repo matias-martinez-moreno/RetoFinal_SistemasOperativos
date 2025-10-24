@@ -43,6 +43,7 @@ Argumentos* parsear_argumentos(int argc, char* argv[]) {
     args->descomprimir = false;
     args->encriptar = false;
     args->desencriptar = false;
+    args->operacion_combinada = NULL;
     args->algoritmo_comp = NULL;
     args->algoritmo_enc = NULL;
     args->archivo_entrada = NULL;
@@ -51,7 +52,16 @@ Argumentos* parsear_argumentos(int argc, char* argv[]) {
     
     // Parsear argumentos
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-c") == 0) {
+        // Verificar operaciones combinadas primero
+        if (strcmp(argv[i], "-ce") == 0) {
+            args->operacion_combinada = "-ce";
+        } else if (strcmp(argv[i], "-de") == 0) {
+            args->operacion_combinada = "-de";
+        } else if (strcmp(argv[i], "-ec") == 0) {
+            args->operacion_combinada = "-ec";
+        } else if (strcmp(argv[i], "-du") == 0) {
+            args->operacion_combinada = "-du";
+        } else if (strcmp(argv[i], "-c") == 0) {
             args->comprimir = true;
         }
         else if (strcmp(argv[i], "-d") == 0) {
@@ -121,8 +131,8 @@ Argumentos* parsear_argumentos(int argc, char* argv[]) {
     }
     
     // Validar argumentos requeridos
-    if (!args->comprimir && !args->descomprimir && !args->encriptar && !args->desencriptar) {
-        fprintf(stderr, "Error: Debe especificar una operación (-c, -d, -e, -u)\n");
+    if (!args->comprimir && !args->descomprimir && !args->encriptar && !args->desencriptar && !args->operacion_combinada) {
+        fprintf(stderr, "Error: Debe especificar una operación (-c, -d, -e, -u) o operación combinada (-ce, -de, -ec, -du)\n");
         liberar_argumentos(args);
         return NULL;
     }
