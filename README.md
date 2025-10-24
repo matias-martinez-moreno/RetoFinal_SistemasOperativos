@@ -1,4 +1,4 @@
-# Proyecto GSEA - Compresor y Encriptador de Archivos
+# Proyecto Final
 
 ## Equipo de Desarrollo
 - **Matías Martínez**
@@ -212,30 +212,30 @@ gsea/
 
 ### COMPLETADO (80% del proyecto total)
 
-#### Funcionalidad del Programa (100% completado)
+#### Funcionalidad del Programa
 - **Compresión/Descompresión**: RLE implementado desde cero, sin corrupción de datos
 - **Encriptación/Desencriptación**: Vigenère implementado desde cero, funciona correctamente
 - **Manejo de Argumentos**: Parser completo con validación robusta
 
-#### Aplicación de Conceptos de SO (62% completado)
-- **Llamadas al Sistema**: 100% - open, read, write, close, opendir, readdir implementados
-- **Concurrencia**: 0% - NO implementada (principal limitación)
-- **Manejo de Recursos**: 100% - Sin fugas de memoria, gestión correcta
+#### Aplicación de Conceptos de SO
+- **Llamadas al Sistema**: open, read, write, close, opendir, readdir implementados
+- **Concurrencia**: NO implementada (principal limitación)
+- **Manejo de Recursos**: Sin fugas de memoria, gestión correcta
 
-#### Calidad del Código y Algoritmos (100% completado)
-- **Algoritmos**: 100% - RLE y Vigenère implementados desde cero sin librerías externas
-- **Estructura**: 100% - Código legible, modular, bien documentado en español
+#### Calidad del Código y Algoritmos
+- **Algoritmos**: RLE y Vigenère implementados desde cero sin librerías externas
+- **Estructura**: Código legible, modular, bien documentado en español
 
-#### Documentación (80% completado)
-- **README**: 100% - Completo y profesional
-- **Código**: 100% - Bien comentado en español
-- **Documento técnico**: 0% - Falta documento PDF completo
+#### Documentación
+- **README**: Completo y profesional
+- **Código**: Bien comentado en español
+- **Documento técnico**: Falta documento PDF completo
 
 ### PENDIENTE (20% del proyecto total)
-- **Concurrencia**: Procesamiento paralelo con pthreads (0% implementado)
-- **Operaciones combinadas**: -ce, -de, -ec, -du (0% implementado)
-- **Documentación técnica**: Documento PDF completo (0% implementado)
-- **Video de sustentación**: Demostración en vivo (0% implementado)
+- **Concurrencia**: Procesamiento paralelo con pthreads
+- **Operaciones combinadas**: -ce, -de, -ec, -du
+- **Documentación técnica**: Documento PDF completo
+- **Video de sustentación**: Demostración en vivo
 
 ## Requisitos
 - Sistema operativo Linux/Unix
