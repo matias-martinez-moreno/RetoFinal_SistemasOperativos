@@ -208,30 +208,30 @@ gsea/
 └── README.md
 ```
 
-## Cumplimiento de Requisitos del Proyecto
+## Estado del Proyecto
 
-### ✅ COMPLETADO (83/100 puntos estimados)
+### COMPLETADO (83% del proyecto total)
 
-#### Funcionalidad del Programa (30/30 pts)
-- **Compresión/Descompresión**: ✅ RLE implementado desde cero, sin corrupción de datos
-- **Encriptación/Desencriptación**: ✅ Vigenère implementado desde cero, funciona correctamente
-- **Manejo de Argumentos**: ✅ Parser completo con validación robusta
+#### Funcionalidad del Programa (100% completado)
+- **Compresión/Descompresión**: RLE implementado desde cero, sin corrupción de datos
+- **Encriptación/Desencriptación**: Vigenère implementado desde cero, funciona correctamente
+- **Manejo de Argumentos**: Parser completo con validación robusta
 
-#### Aplicación de Conceptos de SO (25/40 pts)
-- **Llamadas al Sistema**: ✅ 15/15 pts - open, read, write, close, opendir, readdir implementados
-- **Concurrencia**: ❌ 0/15 pts - NO implementada (principal limitación)
-- **Manejo de Recursos**: ✅ 10/10 pts - Sin fugas de memoria, gestión correcta
+#### Aplicación de Conceptos de SO (62% completado)
+- **Llamadas al Sistema**: 100% - open, read, write, close, opendir, readdir implementados
+- **Concurrencia**: 0% - NO implementada (principal limitación)
+- **Manejo de Recursos**: 100% - Sin fugas de memoria, gestión correcta
 
-#### Calidad del Código y Algoritmos (20/20 pts)
-- **Algoritmos**: ✅ 15/15 pts - RLE y Vigenère implementados desde cero sin librerías externas
-- **Estructura**: ✅ 5/5 pts - Código legible, modular, bien documentado en español
+#### Calidad del Código y Algoritmos (100% completado)
+- **Algoritmos**: 100% - RLE y Vigenère implementados desde cero sin librerías externas
+- **Estructura**: 100% - Código legible, modular, bien documentado en español
 
-#### Documentación (8/10 pts)
-- **README**: ✅ Completo y profesional
-- **Código**: ✅ Bien comentado en español
-- **Falta**: ❌ Documento técnico completo (PDF)
+#### Documentación (80% completado)
+- **README**: 100% - Completo y profesional
+- **Código**: 100% - Bien comentado en español
+- **Documento técnico**: 0% - Falta documento PDF completo
 
-### ❌ PENDIENTE (17/100 puntos)
+### PENDIENTE (17% del proyecto total)
 - **Concurrencia**: Procesamiento paralelo con pthreads (0% implementado)
 - **Operaciones combinadas**: -ce, -de, -ec, -du (0% implementado)
 - **Documentación técnica**: Documento PDF completo (0% implementado)
