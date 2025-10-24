@@ -1,6 +1,7 @@
 #include "../include/args.h"
 #include "../include/file_manager.h"
 #include "../include/compression.h"
+#include "../include/encryption.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +14,7 @@
  */
 int main(int argc, char* argv[]) {
     printf("GSEA - Utilidad de Gestión Segura y Eficiente de Archivos\n");
-    printf("Versión: 1.0 (Avance - Solo Compresión RLE)\n\n");
+    printf("Versión: 2.0 (Fase 2 - Compresión RLE + Encriptación Vigenère)\n\n");
     
     // Parsear argumentos de línea de comandos
     Argumentos* args = parsear_argumentos(argc, argv);
@@ -117,12 +118,93 @@ int main(int argc, char* argv[]) {
         printf("Descompresión completada exitosamente\n");
         liberar_datos(datos_descomprimidos);
         
-    } else if (args->encriptar || args->desencriptar) {
-        fprintf(stderr, "Error: Las operaciones de encriptación no están implementadas en esta versión\n");
-        fprintf(stderr, "Esta es una versión de avance que solo soporta compresión/descompresión\n");
-        liberar_datos(contenido_original);
-        liberar_argumentos(args);
-        return 1;
+    } else if (args->encriptar) {
+        printf("Iniciando encriptación con algoritmo: %s\n", args->algoritmo_enc);
+        
+        // Verificar que el algoritmo sea Vigenère
+        if (strcmp(args->algoritmo_enc, "vigenere") != 0) {
+            fprintf(stderr, "Error: Solo se soporta el algoritmo 'vigenere' en esta versión\n");
+            liberar_datos(contenido_original);
+            liberar_argumentos(args);
+            return 1;
+        }
+        
+        // Verificar que se proporcionó una clave
+        if (!args->clave) {
+            fprintf(stderr, "Error: Se requiere una clave (-k) para encriptación\n");
+            liberar_datos(contenido_original);
+            liberar_argumentos(args);
+            return 1;
+        }
+        
+        // Encriptar los datos
+        char* datos_encriptados = NULL;
+        size_t tamano_encriptado = 0;
+        
+        if (encriptar_vigenere(contenido_original, tamano_original, args->clave, 
+                               &datos_encriptados, &tamano_encriptado) != 0) {
+            fprintf(stderr, "Error: No se pudo encriptar el archivo\n");
+            liberar_datos(contenido_original);
+            liberar_argumentos(args);
+            return 1;
+        }
+        
+        // Escribir el archivo encriptado
+        printf("Escribiendo archivo encriptado: %s\n", args->archivo_salida);
+        if (escribir_archivo(args->archivo_salida, datos_encriptados, tamano_encriptado) != 0) {
+            fprintf(stderr, "Error: No se pudo escribir el archivo encriptado\n");
+            liberar_datos(contenido_original);
+            liberar_datos_encriptados(datos_encriptados);
+            liberar_argumentos(args);
+            return 1;
+        }
+        
+        printf("Encriptación completada exitosamente\n");
+        liberar_datos_encriptados(datos_encriptados);
+        
+    } else if (args->desencriptar) {
+        printf("Iniciando desencriptación con algoritmo: %s\n", args->algoritmo_enc);
+        
+        // Verificar que el algoritmo sea Vigenère
+        if (strcmp(args->algoritmo_enc, "vigenere") != 0) {
+            fprintf(stderr, "Error: Solo se soporta el algoritmo 'vigenere' en esta versión\n");
+            liberar_datos(contenido_original);
+            liberar_argumentos(args);
+            return 1;
+        }
+        
+        // Verificar que se proporcionó una clave
+        if (!args->clave) {
+            fprintf(stderr, "Error: Se requiere una clave (-k) para desencriptación\n");
+            liberar_datos(contenido_original);
+            liberar_argumentos(args);
+            return 1;
+        }
+        
+        // Desencriptar los datos
+        char* datos_desencriptados = NULL;
+        size_t tamano_desencriptado = 0;
+        
+        if (desencriptar_vigenere(contenido_original, tamano_original, args->clave,
+                                  &datos_desencriptados, &tamano_desencriptado) != 0) {
+            fprintf(stderr, "Error: No se pudo desencriptar el archivo\n");
+            liberar_datos(contenido_original);
+            liberar_argumentos(args);
+            return 1;
+        }
+        
+        // Escribir el archivo desencriptado
+        printf("Escribiendo archivo desencriptado: %s\n", args->archivo_salida);
+        if (escribir_archivo(args->archivo_salida, datos_desencriptados, tamano_desencriptado) != 0) {
+            fprintf(stderr, "Error: No se pudo escribir el archivo desencriptado\n");
+            liberar_datos(contenido_original);
+            liberar_datos_encriptados(datos_desencriptados);
+            liberar_argumentos(args);
+            return 1;
+        }
+        
+        printf("Desencriptación completada exitosamente\n");
+        liberar_datos_encriptados(datos_desencriptados);
     }
     
     // Limpiar memoria

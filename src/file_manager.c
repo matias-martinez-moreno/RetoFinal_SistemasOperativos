@@ -9,14 +9,25 @@
 
 /**
  * Lee un archivo completo usando llamadas al sistema
+ * 
+ * Esta función lee todo el contenido de un archivo usando las llamadas
+ * al sistema open(), read(), close() en lugar de las funciones estándar
+ * de stdio.h. Esto es requerido por el proyecto para demostrar
+ * conocimiento de llamadas al sistema operativo.
+ * 
+ * @param ruta Ruta del archivo a leer
+ * @param contenido Puntero donde se almacenará el contenido del archivo
+ * @param tamano Puntero donde se almacenará el tamaño del archivo
+ * @return 0 si es exitoso, -1 si hay error
  */
 int leer_archivo(const char* ruta, char** contenido, size_t* tamano) {
+    // Verificar que todos los parámetros sean válidos
     if (!ruta || !contenido || !tamano) {
         fprintf(stderr, "Error: Parámetros inválidos para leer_archivo\n");
         return -1;
     }
     
-    // Abrir archivo en modo lectura
+    // Abrir el archivo en modo solo lectura usando llamada al sistema
     int fd = open(ruta, O_RDONLY);
     if (fd == -1) {
         fprintf(stderr, "Error: No se pudo abrir el archivo '%s': %s\n", ruta, strerror(errno));

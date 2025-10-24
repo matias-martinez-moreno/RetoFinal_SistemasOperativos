@@ -5,15 +5,21 @@
 
 /**
  * Implementación propia de strdup para compatibilidad con C99
+ * 
+ * Esta función duplica una cadena de caracteres asignando nueva memoria.
+ * Es necesaria porque strdup no está disponible en el estándar C99.
+ * 
+ * @param s Cadena original a duplicar
+ * @return Puntero a la nueva cadena duplicada, NULL si hay error
  */
 char* mi_strdup(const char* s) {
-    if (!s) return NULL;
-    size_t len = strlen(s) + 1;
-    char* dup = malloc(len);
+    if (!s) return NULL;  // Verificar que la cadena no sea nula
+    size_t len = strlen(s) + 1;  // Calcular longitud + terminador nulo
+    char* dup = malloc(len);  // Asignar memoria para la nueva cadena
     if (dup) {
-        strcpy(dup, s);
+        strcpy(dup, s);  // Copiar el contenido de la cadena original
     }
-    return dup;
+    return dup;  // Retornar la cadena duplicada
 }
 
 /**

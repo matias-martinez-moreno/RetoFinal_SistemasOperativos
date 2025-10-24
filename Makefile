@@ -11,7 +11,7 @@ INCLUDE_DIR = include
 OBJ_DIR = obj
 
 # Archivos fuente
-SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/args.c $(SRC_DIR)/file_manager.c $(SRC_DIR)/compression.c
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/args.c $(SRC_DIR)/file_manager.c $(SRC_DIR)/compression.c $(SRC_DIR)/encryption.c
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 # Nombre del ejecutable

@@ -6,10 +6,21 @@
 /**
  * Comprime datos usando el algoritmo RLE (Run-Length Encoding)
  * 
- * El algoritmo RLE funciona contando secuencias consecutivas del mismo carácter
- * y las codifica como: [carácter][contador]
+ * El algoritmo RLE (Run-Length Encoding) es un método de compresión sin pérdida
+ * que funciona contando secuencias consecutivas del mismo carácter y las codifica
+ * como: [carácter][contador]. Es especialmente eficaz con datos que contienen
+ * muchas repeticiones consecutivas.
  * 
- * Ejemplo: "AAAABBBCC" se convierte en "A4B3C2"
+ * Ejemplo de funcionamiento:
+ * - Entrada: "AAAABBBCC"
+ * - Proceso: A(4) + B(3) + C(2)
+ * - Salida: "A4B3C2"
+ * 
+ * Ventajas del algoritmo RLE:
+ * - Simple de implementar
+ * - Eficiente para datos repetitivos
+ * - Compresión sin pérdida
+ * - Tiempo de procesamiento O(n)
  */
 int comprimir_rle(const char* datos, size_t tamano_original, 
                   char** datos_comprimidos, size_t* tamano_comprimido) {
