@@ -1,0 +1,27 @@
+# Archivos de compilación
+obj/
+gsea
+
+# Archivos temporales de prueba
+*.txt
+*.rle
+*.enc
+*.ce
+*.de
+*.ec
+*.du
+
+# Directorios de prueba
+test_dir*/
+directorio_*/
+datos_geneticos*
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de respaldo
+*~
+*.bak
+*.swp
+*.tmp

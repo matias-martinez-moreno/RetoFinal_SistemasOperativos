@@ -17,6 +17,9 @@ OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 # Nombre del ejecutable
 TARGET = gsea
 
+# Archivos temporales a limpiar
+TEMP_FILES = *.txt *.rle *.enc *.ce *.de *.ec *.du test_dir* directorio_* datos_geneticos*
+
 # Regla principal
 all: $(TARGET)
 
@@ -32,31 +35,28 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@echo "Compilando $<..."
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
-# Limpiar archivos generados
+# Limpiar archivos generados y temporales
 clean:
 	@echo "Limpiando archivos generados..."
 	rm -rf $(OBJ_DIR)
 	rm -f $(TARGET)
+	rm -f $(TEMP_FILES)
+	rm -rf test_dir* directorio_* datos_geneticos*
 	@echo "Limpieza completada"
 
-# Instalar el programa (opcional)
-install: $(TARGET)
-	@echo "Instalando $(TARGET) en /usr/local/bin..."
-	sudo cp $(TARGET) /usr/local/bin/
-	@echo "Instalación completada"
-
-# Desinstalar el programa
-uninstall:
-	@echo "Desinstalando $(TARGET)..."
-	sudo rm -f /usr/local/bin/$(TARGET)
-	@echo "Desinstalación completada"
+# Limpiar solo archivos temporales de prueba
+clean-test:
+	@echo "Limpiando archivos de prueba..."
+	rm -f $(TEMP_FILES)
+	rm -rf test_dir* directorio_* datos_geneticos*
+	@echo "Limpieza de pruebas completada"
 
 # Crear directorio de objetos si no existe
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 
 # Reglas phony
-.PHONY: all clean install uninstall
+.PHONY: all clean clean-test
 
 # Información de ayuda
 help:
@@ -64,7 +64,6 @@ help:
 	@echo ""
 	@echo "Comandos disponibles:"
 	@echo "  make          - Compilar el proyecto"
-	@echo "  make clean    - Limpiar archivos generados"
-	@echo "  make install  - Instalar en /usr/local/bin"
-	@echo "  make uninstall - Desinstalar"
+	@echo "  make clean    - Limpiar archivos generados y temporales"
+	@echo "  make clean-test - Limpiar solo archivos de prueba"
 	@echo "  make help     - Mostrar esta ayuda"
