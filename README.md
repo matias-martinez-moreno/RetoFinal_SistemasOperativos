@@ -43,21 +43,21 @@ echo "Archivo descomprimido:" && cat test_descomprimido.txt
 
 ### Paso 3: Probar Encriptación de Archivos Individuales
 ```bash
-# Crear archivo de prueba
-echo "proyecto final sistemas operativos" > mensaje.txt
+# Crear archivo de prueba con datos genéticos repetitivos
+echo "ATCGATCGATCGATCGATCGATCGATCGATCG" > datos_geneticos.txt
 
 # Encriptar el archivo usando algoritmo Vigenère
-./gsea -e --enc-alg vigenere -i mensaje.txt -o mensaje.txt.enc -k "clave"
+./gsea -e --enc-alg vigenere -i datos_geneticos.txt -o datos_geneticos.txt.enc -k "genoma"
 
 # Verificar que se creó el archivo encriptado
-ls -la mensaje.txt.enc
+ls -la datos_geneticos.txt.enc
 
 # Desencriptar el archivo
-./gsea -u --enc-alg vigenere -i mensaje.txt.enc -o mensaje_desencriptado.txt -k "clave"
+./gsea -u --enc-alg vigenere -i datos_geneticos.txt.enc -o datos_desencriptados.txt -k "genoma"
 
 # Verificar que el contenido es idéntico al original
-echo "Mensaje original:" && cat mensaje.txt
-echo "Mensaje desencriptado:" && cat mensaje_desencriptado.txt
+echo "Datos genéticos originales:" && cat datos_geneticos.txt
+echo "Datos desencriptados:" && cat datos_desencriptados.txt
 ```
 
 ### Paso 4: Probar Procesamiento de Directorios Completos
@@ -147,12 +147,14 @@ El proyecto está diseñado con una arquitectura modular que separa las responsa
 - **Implementación**: `[carácter][contador]` (ej: "AAAABBB" → "A4B3")
 - **Ventajas**: Simple, rápido, eficaz con datos repetitivos
 - **Complejidad**: O(n) tiempo y espacio
+- **Caso de uso**: Datos genéticos repetitivos (ATCG) con 84% de compresión
 
 #### Vigenère:
 - **Función**: Cifrado polialfabético con clave cíclica
 - **Implementación**: C = (P + K) mod 26, P = (C - K + 26) mod 26
 - **Ventajas**: Seguro, reversible, clave reutilizable
 - **Complejidad**: O(n) tiempo y espacio
+- **Caso de uso**: Protección de datos genéticos confidenciales
 
 ### Gestión de Memoria
 - **Asignación**: `malloc()` para buffers dinámicos
@@ -243,3 +245,10 @@ gsea/
 
 ## Caso de Uso
 Ideal para startups de biotecnología que manejan datos genéticos repetitivos y confidenciales, permitiendo compresión eficiente y encriptación segura de archivos y directorios masivos.
+
+### ¿Por qué datos genéticos (ATCG)?
+- **Alta compresión**: Secuencias repetitivas como "ATCGATCGATCG" se comprimen a "ATCG3" (84% de reducción)
+- **Datos reales**: ATCG son las bases del ADN (Adenina, Timina, Citosina, Guanina)
+- **Confidencialidad**: Información genética requiere protección estricta
+- **Volumen masivo**: Secuenciación genómica genera terabytes de datos
+- **Repeticiones naturales**: Patrones genéticos son inherentemente repetitivos
