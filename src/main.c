@@ -2,6 +2,7 @@
 #include "../include/file_manager.h"
 #include "../include/compression.h"
 #include "../include/encryption.h"
+#include "../include/directory_processor.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +15,7 @@
  */
 int main(int argc, char* argv[]) {
     printf("GSEA - Utilidad de Gestión Segura y Eficiente de Archivos\n");
-    printf("Versión: 2.0 (Fase 2 - Compresión RLE + Encriptación Vigenère)\n\n");
+    printf("Versión: 2.1 (Fase 2 - Compresión RLE + Encriptación Vigenère + Directorios)\n\n");
     
     // Parsear argumentos de línea de comandos
     Argumentos* args = parsear_argumentos(argc, argv);
@@ -22,17 +23,50 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    // Verificar que el archivo de entrada existe
+    // Verificar que el archivo o directorio de entrada existe
     int existe = archivo_existe(args->archivo_entrada);
     if (existe == 0) {
-        fprintf(stderr, "Error: El archivo de entrada '%s' no existe\n", args->archivo_entrada);
+        fprintf(stderr, "Error: El archivo o directorio de entrada '%s' no existe\n", args->archivo_entrada);
         liberar_argumentos(args);
         return 1;
     } else if (existe == -1) {
-        fprintf(stderr, "Error: No se pudo acceder al archivo de entrada '%s'\n", args->archivo_entrada);
+        fprintf(stderr, "Error: No se pudo acceder al archivo o directorio de entrada '%s'\n", args->archivo_entrada);
         liberar_argumentos(args);
         return 1;
     }
+    
+    // Verificar si la entrada es un directorio
+    int es_dir = es_directorio(args->archivo_entrada);
+    if (es_dir == 1) {
+        // Procesar directorio completo
+        printf("Procesando directorio: %s\n", args->archivo_entrada);
+        
+        char operacion = 'c'; // Por defecto comprimir
+        if (args->comprimir) operacion = 'c';
+        else if (args->descomprimir) operacion = 'd';
+        else if (args->encriptar) operacion = 'e';
+        else if (args->desencriptar) operacion = 'u';
+        
+        int resultado = procesar_directorio(args->archivo_entrada, args->archivo_salida,
+                                           operacion, args->algoritmo_comp, 
+                                           args->algoritmo_enc, args->clave);
+        
+        liberar_argumentos(args);
+        
+        if (resultado == 0) {
+            printf("Procesamiento de directorio completado exitosamente\n");
+            return 0;
+        } else {
+            printf("Error en el procesamiento del directorio\n");
+            return 1;
+        }
+    } else if (es_dir == -1) {
+        fprintf(stderr, "Error: No se pudo verificar el tipo de entrada '%s'\n", args->archivo_entrada);
+        liberar_argumentos(args);
+        return 1;
+    }
+    
+    // Si llegamos aquí, es un archivo individual
     
     // Leer el archivo de entrada
     char* contenido_original = NULL;

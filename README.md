@@ -1,45 +1,60 @@
 # GSEA - Utilidad de Gestión Segura y Eficiente de Archivos
 
 ## Descripción
-Utilidad de línea de comandos para comprimir/descomprimir y encriptar/desencriptar archivos. Implementa algoritmos propios de compresión RLE y encriptación Vigenère usando llamadas directas al sistema operativo.
+Utilidad de línea de comandos para comprimir/descomprimir y encriptar/desencriptar archivos y directorios. Implementa algoritmos propios de compresión RLE y encriptación Vigenère usando llamadas directas al sistema operativo.
 
-## Características Implementadas
-- **Compresión RLE**: Algoritmo Run-Length Encoding implementado desde cero
-- **Encriptación Vigenère**: Cifrado polialfabético con clave secreta
-- **Llamadas al Sistema**: Uso directo de open(), read(), write(), close()
-- **Parser de Argumentos**: Manejo completo de parámetros de línea de comandos
-- **Gestión de Memoria**: Liberación adecuada de recursos
-- **Manejo de Errores**: Validación robusta de entrada
+## Cómo Probar
 
-## Compilación
+### Compilación
 ```bash
 make
 ```
 
-## Uso
-
-### Compresión/Descompresión
+### Probar con archivos individuales
 ```bash
-# Comprimir un archivo
-./gsea -c --comp-alg rle -i archivo.txt -o archivo.txt.rle
+# Crear archivo de prueba
+echo "AAAABBBCCDDDD" > test.txt
 
-# Descomprimir un archivo
-./gsea -d --comp-alg rle -i archivo.txt.rle -o archivo_descomprimido.txt
+# Comprimir archivo
+./gsea -c --comp-alg rle -i test.txt -o test.txt.rle
+
+# Descomprimir archivo
+./gsea -d --comp-alg rle -i test.txt.rle -o test_descomprimido.txt
+
+# Encriptar archivo
+./gsea -e --enc-alg vigenere -i test.txt -o test.txt.enc -k "clave"
+
+# Desencriptar archivo
+./gsea -u --enc-alg vigenere -i test.txt.enc -o test_desencriptado.txt -k "clave"
 ```
 
-### Encriptación/Desencriptación
+### Probar con directorios
 ```bash
-# Encriptar un archivo
-./gsea -e --enc-alg vigenere -i archivo.txt -o archivo.txt.enc -k "clave"
+# Crear directorio de prueba
+mkdir test_dir
+echo "contenido1" > test_dir/archivo1.txt
+echo "contenido2" > test_dir/archivo2.txt
 
-# Desencriptar un archivo
-./gsea -u --enc-alg vigenere -i archivo.txt.enc -o archivo_desencriptado.txt -k "clave"
+# Comprimir directorio completo
+./gsea -c --comp-alg rle -i test_dir -o test_dir_comprimido
+
+# Encriptar directorio completo
+./gsea -e --enc-alg vigenere -i test_dir -o test_dir_encriptado -k "clave"
 ```
 
-### Ayuda
-```bash
-./gsea --help
-```
+## Funcionalidades Implementadas
+
+### Algoritmos Core
+- **Compresión RLE**: Algoritmo Run-Length Encoding implementado desde cero
+- **Encriptación Vigenère**: Cifrado polialfabético con clave secreta
+- **Llamadas al Sistema**: open(), read(), write(), close(), opendir(), readdir()
+
+### Procesamiento
+- **Archivos individuales**: Compresión/descompresión y encriptación/desencriptación
+- **Directorios completos**: Procesamiento automático de todos los archivos
+- **Parser de argumentos**: Manejo completo de parámetros de línea de comandos
+- **Gestión de memoria**: Liberación adecuada de recursos
+- **Manejo de errores**: Validación robusta de entrada
 
 ## Algoritmos Implementados
 
@@ -57,25 +72,37 @@ make
 ```
 gsea/
 ├── src/
-│   ├── main.c              # Función principal
-│   ├── args.c              # Parser de argumentos
-│   ├── file_manager.c      # Manejo de archivos con llamadas al sistema
-│   ├── compression.c       # Algoritmo RLE
-│   └── encryption.c        # Algoritmo Vigenère
+│   ├── main.c                    # Función principal
+│   ├── args.c                    # Parser de argumentos
+│   ├── file_manager.c            # Manejo de archivos con llamadas al sistema
+│   ├── compression.c             # Algoritmo RLE
+│   ├── encryption.c              # Algoritmo Vigenère
+│   └── directory_processor.c     # Procesamiento de directorios
 ├── include/
 │   ├── args.h
 │   ├── file_manager.h
 │   ├── compression.h
-│   └── encryption.h
+│   ├── encryption.h
+│   └── directory_processor.h
 ├── Makefile
 └── README.md
 ```
 
 ## Estado del Proyecto
+
+### Completado (40% del proyecto total)
 - **Fase 1**: Estructura base (100% completada)
 - **Fase 2**: Algoritmos core (100% completada)
-- **Fase 3**: Concurrencia (0% - próxima versión)
-- **Fase 4**: Integración avanzada (0% - próxima versión)
+- **Procesamiento de directorios**: Implementado con opendir/readdir
+- **Llamadas al sistema**: open, read, write, close, opendir, readdir
+- **Algoritmos propios**: RLE y Vigenère implementados desde cero
+
+### Faltante (60% del proyecto total)
+- **Concurrencia**: Procesamiento paralelo con pthreads (0% implementado)
+- **Operaciones combinadas**: -ce, -de, -ec, -du (0% implementado)
+- **Optimización**: Rendimiento y memoria (0% implementado)
+- **Testing**: Casos de prueba automatizados (0% implementado)
+- **Documentación**: Documento técnico completo (0% implementado)
 
 ## Requisitos
 - Sistema operativo Linux/Unix
@@ -84,4 +111,4 @@ gsea/
 - pthreads (para futuras versiones)
 
 ## Caso de Uso
-Ideal para startups de biotecnología que manejan datos genéticos repetitivos y confidenciales, permitiendo compresión eficiente y encriptación segura de archivos masivos.
+Ideal para startups de biotecnología que manejan datos genéticos repetitivos y confidenciales, permitiendo compresión eficiente y encriptación segura de archivos y directorios masivos.
