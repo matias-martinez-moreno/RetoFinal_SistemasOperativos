@@ -112,8 +112,8 @@ int descomprimir_rle(const char* datos_comprimidos, size_t tamano_comprimido,
             char siguiente = datos_comprimidos[i];
             
             // Si el siguiente carácter es un número (contador)
-            if (siguiente >= 1 && siguiente <= 127) {
-                int contador = (int)siguiente;
+            if (siguiente >= '1' && siguiente <= '9') {
+                int contador = siguiente - '0';
                 i++; // Saltar el contador
                 
                 // Repetir el carácter el número de veces indicado

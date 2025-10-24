@@ -10,6 +10,8 @@ Utilidad de línea de comandos desarrollada en C que permite comprimir/descompri
 
 ## Cómo Probar el Proyecto
 
+**Importante**: Asegúrate de estar en el directorio del proyecto antes de ejecutar los comandos.
+
 ### Paso 1: Compilar el Proyecto
 ```bash
 # Compilar usando Makefile
@@ -42,7 +44,7 @@ echo "Archivo descomprimido:" && cat test_descomprimido.txt
 ### Paso 3: Probar Encriptación de Archivos Individuales
 ```bash
 # Crear archivo de prueba
-echo "Hola mundo, este es un mensaje secreto" > mensaje.txt
+echo "proyecto final sistemas operativos" > mensaje.txt
 
 # Encriptar el archivo usando algoritmo Vigenère
 ./gsea -e --enc-alg vigenere -i mensaje.txt -o mensaje.txt.enc -k "clave"
