@@ -12,9 +12,9 @@ Utilidad de línea de comandos desarrollada en C que permite comprimir/descompri
 
 ### Paso 1: Compilar el Proyecto
 ```bash
-# Clonar el repositorio
-git clone https://github.com/matias-martinez-moreno/RetoFinal_SistemasOperativos.git
-cd RetoFinal_SistemasOperativos
+# Extraer el archivo del proyecto
+tar -xzf ProyectoFinal_GSEA.tar.gz
+cd parcialFinal_SistemasOperativos
 
 # Compilar usando Makefile
 make
